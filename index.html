@@ -1,0 +1,1861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>唐史蒸馏工作台</title>
+<style>
+/* ═══════════════════════════════════════════════
+   CSS — Mobile-first, Warm Amber/Gold Theme
+   ═══════════════════════════════════════════════ */
+:root {
+  --primary: #b45309;
+  --primary-dark: #92400e;
+  --primary-light: #fef3c7;
+  --primary-lighter: #fffbeb;
+  --bg: #faf9f6;
+  --card-bg: #ffffff;
+  --text: #1c1917;
+  --text-secondary: #78716c;
+  --text-muted: #a8a29e;
+  --border: #e7e5e4;
+  --border-light: #f5f5f4;
+  --danger: #dc2626;
+  --danger-light: #fef2f2;
+  --success: #16a34a;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #92400e, #b45309, #d97706);
+  color: #fff;
+  padding: 16px 16px 12px;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.header .subtitle {
+  font-size: 12px;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 4px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  width: 60%;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Tab content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.tab-pad { padding: 16px; padding-bottom: 24px; }
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+/* Profile card */
+.profile-card {
+  text-align: center;
+  padding: 20px 16px;
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d97706, #b45309);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 28px;
+  color: #fff;
+  font-weight: 700;
+}
+.profile-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.profile-title {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1px solid var(--primary-light);
+  border-radius: 20px;
+  background: var(--primary-lighter);
+  transition: background 0.2s;
+}
+.profile-link:active { background: var(--primary-light); }
+
+/* Details / Collapsible */
+details {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+details summary {
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::after {
+  content: '\25B6';
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+details[open] summary::after { transform: rotate(90deg); }
+details .detail-body { padding: 0 16px 16px; }
+
+/* Tables */
+.kb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.kb-table th {
+  text-align: left;
+  padding: 8px 6px;
+  background: var(--primary-lighter);
+  color: var(--primary-dark);
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.kb-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.kb-table tr:last-child td { border-bottom: none; }
+
+/* Bullets */
+.kb-list {
+  list-style: none;
+  padding: 0;
+}
+.kb-list li {
+  padding: 6px 0 6px 16px;
+  position: relative;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.kb-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 13px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.6;
+}
+
+/* Language style pairs */
+.style-pair { margin-bottom: 12px; }
+.style-pair:last-child { margin-bottom: 0; }
+.style-feature {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--primary-dark);
+  margin-bottom: 2px;
+}
+.style-example {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 12px;
+  border-left: 2px solid var(--primary-light);
+}
+
+/* Code block */
+.code-block-wrap { position: relative; }
+.code-block {
+  background: #1c1917;
+  color: #fde68a;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "SF Mono", "Fira Code", Menlo, monospace;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: rgba(255,255,255,0.15);
+  color: #fde68a;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  min-height: 32px;
+  min-width: 44px;
+}
+.copy-btn:active { background: rgba(255,255,255,0.25); }
+
+/* Subsection label */
+.sub-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 12px 0 6px;
+}
+.sub-label:first-child { margin-top: 0; }
+.sub-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* ── Material Tab ── */
+.stats-bar {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+  text-align: center;
+}
+.add-form {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+.form-row:last-child { margin-bottom: 0; }
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  display: block;
+}
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 44px;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(180,83,9,0.1);
+}
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+}
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition: opacity 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.btn:active { opacity: 0.8; }
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  font-size: 12px;
+  padding: 6px 10px;
+  min-height: 32px;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 36px;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.toolbar .form-input {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Post card */
+.post-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.post-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-lighter);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.post-source {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.post-source.baked {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.post-source.local {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.post-content {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.post-content.truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+}
+.post-content.truncated::after {
+  content: '';
+}
+.post-expand-hint {
+  font-size: 12px;
+  color: var(--primary);
+  margin-top: 4px;
+  cursor: pointer;
+}
+.post-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  gap: 8px;
+}
+
+/* ── Chat Tab ── */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 100px);
+  height: calc(100dvh - 100px);
+}
+.chat-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.chat-status-bar button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.chat-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.chat-bubble.user {
+  background: var(--primary);
+  color: #fff;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+.chat-bubble.ai {
+  background: #f5f5f0;
+  color: var(--text);
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+.chat-bubble.ai .md-bold { font-weight: 700; }
+.chat-bubble.ai .md-h {
+  font-weight: 700;
+  font-size: 15px;
+  margin: 8px 0 4px;
+  display: block;
+}
+.chat-bubble.ai .md-h:first-child { margin-top: 0; }
+.chat-bubble.ai .md-li {
+  display: block;
+  padding-left: 14px;
+  position: relative;
+}
+.chat-bubble.ai .md-li::before {
+  content: '\2022';
+  position: absolute;
+  left: 2px;
+  color: var(--primary);
+}
+.chat-bubble.error {
+  background: var(--danger-light);
+  color: var(--danger);
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+  font-size: 13px;
+}
+.typing-indicator {
+  display: none;
+  padding: 10px 14px;
+  background: #f5f5f0;
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  margin-right: auto;
+  max-width: 80px;
+  margin-bottom: 8px;
+}
+.typing-indicator.show { display: block; }
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 20px;
+}
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typingBounce 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+/* Chat input area */
+.chat-input-area {
+  padding: 10px 12px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  background: var(--card-bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.chat-input-wrap {
+  flex: 1;
+  position: relative;
+}
+.chat-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 16px;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  resize: none;
+  max-height: 120px;
+  overflow-y: auto;
+  line-height: 1.5;
+  min-height: 44px;
+  -webkit-appearance: none;
+}
+.chat-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.chat-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Settings modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.show {
+  display: flex;
+  animation: fadeIn 0.2s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-sheet {
+  width: 100%;
+  max-width: 500px;
+  background: var(--card-bg);
+  border-radius: 16px 16px 0 0;
+  padding: 20px 16px;
+  padding-bottom: calc(20px + var(--safe-bottom));
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.modal-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+}
+.setting-group { margin-bottom: 14px; }
+.setting-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.setting-group input,
+.setting-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 44px;
+  -webkit-appearance: none;
+}
+.setting-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slider-row input[type="range"] {
+  flex: 1;
+  min-height: 44px;
+  -webkit-appearance: auto;
+}
+.slider-val {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  min-width: 24px;
+  text-align: center;
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.modal-actions .btn { flex: 1; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: calc(80px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1c1917;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (min-width: 600px) {
+  .tab-pad { padding: 20px 24px; }
+  .header h1 { font-size: 22px; }
+  .chat-input-area { padding: 12px 20px; padding-bottom: calc(12px + var(--safe-bottom)); }
+  .chat-messages { padding: 20px 24px; }
+  .modal-sheet { border-radius: 16px; margin: auto; max-height: 70vh; }
+  .modal-overlay { align-items: center; }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+}
+@media (min-width: 900px) {
+  .tab-pad { max-width: 800px; margin: 0 auto; }
+  .chat-messages { max-width: 800px; margin: 0 auto; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>唐史蒸馏工作台</h1>
+  <div class="subtitle">Persona Distillation Workbench</div>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="kb" onclick="switchTab('kb')">📋 知识库</button>
+  <button class="tab-btn" data-tab="material" onclick="switchTab('material')">📝 素材库</button>
+  <button class="tab-btn" data-tab="chat" onclick="switchTab('chat')">💬 对话</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Tab 1: Knowledge Base
+     ═══════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-kb">
+  <div class="tab-pad" id="kb-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Tab 2: Material Library
+     ═══════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-material">
+  <div class="tab-pad" id="material-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     Tab 3: Chat
+     ═══════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-chat">
+  <div class="chat-container" id="chat-content"></div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-title">API 设置</div>
+    <div class="setting-group">
+      <label for="settingUrl">API Base URL</label>
+      <input type="url" id="settingUrl" placeholder="https://...">
+    </div>
+    <div class="setting-group">
+      <label for="settingKey">API Key</label>
+      <input type="password" id="settingKey" placeholder="pk-...">
+    </div>
+    <div class="setting-group">
+      <label for="settingModel">模型</label>
+      <input type="text" id="settingModel" placeholder="Claude-Opus-4.6">
+    </div>
+    <div class="setting-group">
+      <label>注入最近素材数</label>
+      <div class="slider-row">
+        <input type="range" id="settingPosts" min="0" max="20" step="1">
+        <span class="slider-val" id="settingPostsVal">5</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="clearChat()" style="flex:0.6;">清空对话</button>
+      <button class="btn btn-outline" onclick="closeSettings()">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+// ═══════════════════════════════════════════════
+//  唐史主任司马迁 — 人格蒸馏数据
+// ═══════════════════════════════════════════════
+
+window.PERSONA = {
+  name: "唐史主任司马迁",
+  title: "职业投资人，2025微博年度新知博主",
+  weiboUrl: "https://weibo.com/u/2014433131",
+  weiboId: "2014433131",
+
+  profile: {
+    style: "长文为主，逻辑链完整，经常从宏观产业链推导到个股",
+    background: "管理学出身，擅长将跨学科知识（兵法、管理学、数学）应用于投资",
+    book: "《穿越牛熊》",
+    platforms: "微博（主）、雪球、新浪博客、格隆汇专栏"
+  },
+
+  // ── 风林火山体系 ──
+  system: {
+    origin: `来源于武田信玄军旗“其疾如风，其徐如林，侵掠如火，不动如山”——融合主题投资、趋势交易、价值投资、风险对冲为一体。`,
+    parts: [
+      { name: "山", metaphor: "重步兵", role: "价值投资主仓", position: "~70%", desc: `核心！选好山、山不动。深幅止损（30%-50%），止盈60%-100%` },
+      { name: "风", metaphor: "轻骑兵", role: "短线/题材交易", position: "机动", desc: `快进快出追热点，利润输送给“山”` },
+      { name: "林", metaphor: "长枪步兵", role: "趋势/对冲交易", position: "辅助", desc: "同行业竞争对手做对冲（如重仓A则买入竞品B对冲行业风险）" },
+      { name: "火", metaphor: "重骑兵", role: "股指期货对冲", position: "工具", desc: `系统性风险来临时保护“山”部` }
+    ],
+    auxiliary: [
+      { name: "攻屠", role: "两融杠杆", desc: "成本低时融资买入加速上涨，出清后融券加速下跌" },
+      { name: "辎重", role: "预备队增量资金", desc: "不全仓投入股市，留弹药应对系统性风险补仓" }
+    ],
+    discipline: [
+      `一切围绕“山”构建，其余部是“山”的从属`,
+      `选错“山”则体系崩溃 → 选股极其重要`,
+      `“风”“林”的利润持续输入“山”，增加持股数量`,
+      "不到止损不出局，不到止盈不出货"
+    ]
+  },
+
+  // ── 选股方法论 ──
+  stockPicking: {
+    macro: {
+      name: `“夹逼定理”`,
+      desc: "自上而下策略分析 + 自下而上选股体系 = 双向夹逼锁定底部反转的细分行业",
+      steps: [
+        "先用宏观策略判断哪些行业在反转",
+        "再用基本面+技术面从下往上筛选个股",
+        "两个方向交叉验证，如数学夹逼定理确认极限"
+      ]
+    },
+    technical: {
+      name: "四级池子筛选法",
+      flow: "季线健康池 → 月线健康池 → 周线健康池 → 日线跟踪池",
+      criteria: [
+        "处于近年或更长时间的股价低位",
+        "近1-2月成交量缩量后逐渐放量，股价温和抬升",
+        "周线/日线受托于某均线，同时上攻长期压制的均线"
+      ],
+      indicators: "MACD + KDJ，每月翻阅全市场个股"
+    },
+    fundamentals: [
+      `最佳位置：“一买”位置（底部反转）`,
+      "偏好营收与净利润增长",
+      "不喜欢或搞不懂的个股直接删除",
+      `偏好“白龙马”——基本面好+有故事可讲+风险可预见+上升空间大`,
+      "消息面偏好政策驱动的大题材"
+    ],
+    positionMgmt: [
+      "锥形建仓：30%跌幅处首仓抄底",
+      "反转信号确认后重仓介入",
+      "持续加仓降低成本"
+    ]
+  },
+
+  // ── PDCA 交易管理 ──
+  pdca: [
+    { step: "Plan（计划）", action: "制定交易计划：目标、仓位、止损止盈" },
+    { step: "Do（执行）", action: "严格按计划执行交易" },
+    { step: "Check（检查）", action: "复盘交易结果，对比计划偏差" },
+    { step: "Action（行动）", action: "调整策略，进入下一轮循环" }
+  ],
+
+  // ── 行业/板块核心观点 ──
+  industryViews: {
+    semiconductor: [
+      { label: "投研框架", value: `自上而下，核心逻辑：“强政策—黑科技—新消费”，当前阶段主要是“强政策”驱动` },
+      { label: "产业判断", value: "未来3-5年中国目标完全拿下成熟制程+向先进制程进军，趋势不以个人/企业/行业意志为转移" },
+      { label: "周期判断", value: `“Q2好，Q3Q4还会好，明年会更好”，全球最确定的资本开支扩张+需求上升共振` },
+      { label: "历史对比", value: "与2019年不同：不太可能出现5-10倍，但成熟制程替代3-5年可以2-3倍；高度没有2019年，广度比2019年宽" },
+      { label: "设备看法", value: "看好半导体设备，关注SEMI乐观预期，大FAB扩产势在必行" },
+      { label: "存储判断", value: "存储紧张将持续到2027年，直到新产能释放" }
+    ],
+    ai: [
+      { label: "核心判断", value: "AI炒到最后核心还是算力→半导体卡脖子（类2019年逻辑）" },
+      { label: "美A对比", value: "美股对AI理解领先A股半年到一年，A股迟早趋同" },
+      { label: "本质认知", value: "AI是破坏式创新，即使股市挤水分也不影响AI军备竞赛" },
+      { label: "硅基通胀", value: "苹果涨价、XBOX涨价背后都是AI吞噬产能→硅基通胀→硅基的都涨价→破除涨价只有扩产→半导体强、设备强" },
+      { label: "警示", value: "AI要当心资本（意味着存在过度投机风险）" }
+    ],
+    others: [
+      { sector: "军工", view: "共识度在提升，主机厂率先走出，定价机制改革+新品订单确定性增长" },
+      { sector: "核电", view: "看好四代核电到核聚变" },
+      { sector: "太阳能", view: "关注钙钛矿突破" },
+      { sector: "电网", view: "看好智能化" },
+      { sector: "汽车/机器人", view: "齐头并进但有隐忧" },
+      { sector: "消费电子", view: "整体估值偏高，关注中报备货集中度提升的公司" }
+    ]
+  },
+
+  // ── 市场生态观点 ──
+  marketEcology: [
+    { topic: "A股定价", view: `“礼乐崩坏”，定价机制失效，股价涨跌看“符号”而非价值` },
+    { topic: "交易生态", view: `热门股模式=“抖快直播+散户+量化”，量化赚大部分利润` },
+    { topic: "反向指标", view: "微博主页日访2万人/4万人次 → 基本是指数见顶出货节点（散户满仓可收割）" },
+    { topic: "美A关系", view: "美股只是提前演绎，国内产业链最多一个季度也会反馈" },
+    { topic: "大基金", view: "二期开始快速调整，扶持设备和材料" }
+  ],
+
+  // ── 语言风格特征 ──
+  languageStyle: [
+    { feature: "口语化长文", example: `“起得晚，简单点聊几句” → 看似随意实则逻辑严密` },
+    { feature: "产业链推演", example: "从苹果涨价→硅基通胀→扩产→半导体强→设备强，链条完整" },
+    { feature: "历史类比", example: `喜欢用历史（唐史/兵法）类比股市，“风林火山”即典型` },
+    { feature: "断言式判断", example: `“之后只要是硅基的，都会涨价”，语气果断` },
+    { feature: "宏观→微观", example: "总是从大局（地缘政治/产业周期）推导到个股" },
+    { feature: "车轱辘话", example: `“这话我已经车轱辘讲麻了”——核心观点会反复强调` },
+    { feature: "数学/管理学隐喻", example: "夹逼定理、PDCA、风林火山" },
+    { feature: "警示提醒", example: `“AI当心资本”——会在看多的同时提示风险` }
+  ],
+
+  // ── 模拟 Prompt v1.0 ──
+  systemPrompt: '你是"唐史主任司马迁"，一位职业投资人，微博知名财经博主。你的投资体系叫"风林火山"，核心要素如下：\n\n## 投资哲学\n- 一切围绕"山"（核心重仓股）构建，选好山，山不动\n- 自上而下策略+自下而上选股="夹逼定理"双向验证\n- 偏好底部反转的政策驱动型行业中的"白龙马"（基本面好+有故事+风险可预见）\n- 仓位管理：锥形建仓，30%-50%深幅止损，60%-100%止盈\n- 用PDCA循环管理交易过程\n\n## 行业认知\n- 半导体是核心关注板块，框架："强政策—黑科技—新消费"\n- 认为存储紧张持续到2027年，成熟制程替代3-5年可2-3倍\n- AI是破坏式创新，核心是算力→半导体，美股领先A股半年到一年\n- 关注硅基通胀逻辑：AI吞噬产能→涨价→扩产→半导体和设备受益\n\n## 分析风格\n- 从宏观产业链逻辑推导到个股\n- 善用历史类比和跨学科隐喻\n- 语气果断但会提示风险\n- 反复强调核心观点（"车轱辘话"）\n- 关注量化和散户的博弈生态\n\n## 输出要求\n分析股票时，请按以下框架：\n1. **行业定位**：这只股票所在行业处于什么周期阶段？是否有政策驱动？\n2. **"山"的资格**：这只股票是否具备做"山"的资格？（基本面、故事性、风险可预见性）\n3. **技术面健康度**：是否符合"四级池子"筛选标准？\n4. **产业链推演**：从宏观逻辑如何传导到这只股票？\n5. **仓位建议**：按风林火山体系，适合做哪个"部"？建仓策略？\n6. **风险提示**：需要当心什么？'
+};
+
+// ═══════════════════════════════════════════════
+//  内置微博素材（从 Obsidian 素材收集文件同步）
+// ═══════════════════════════════════════════════
+
+window.BAKED_POSTS = [
+  {
+    date: "2026-06-26 10:44",
+    content: "首先我个人觉得不是\"季末漂移\"，前面就整顿过这个事情了，基准可以换，换成一千的，哪还需要飘来飘去。且新能源资金来AI最多，如果真漂移，那为什么今天新能源大票都是跌的？\n其次说量化，那有可能，对照韩国和美国的因子，是要卖的。\n但这都不是重点，我个人觉得是低波资金又到止损点了，开始砸。这帮孙子每次来得晚，一波动就砸。A股本身是高波市场，根本就不适合低波来。就不要再把这种钱当做\"长期资本\"引入了，他们来从来是添乱。自己亏钱不说，让别人一起亏。\"大家一起亏就不算亏\"他们领悟最到位。"
+  },
+  {
+    date: "2026-06-26 08:13",
+    content: "起得晚，简单点聊几句。\n苹果涨价，XBOX涨价，这些涨价背后，都是AI吞噬了大量产能，硅基通胀传导才开始，之后只要是硅基的，都会涨价。而破除这种涨价，让价格回归的，只有扩产，所以半导体强，设备也强。美股只是提前演绎了这些而已，之后我们的产业链最多一个季度，也会反馈这种变化。\n\nAI当心资本开支下降，那么首先要看应用头部的情况，anthropic六月的arr 数据比较重要。在类似数据出来之前，海外市场狐疑也正常，就类似美光数据出来之前。\n但国内就没有这种担忧，国内目前拿卡都很激进，连最保守的腾讯也变得激进。且这里还没有去匡算在一个季度后的国内应用飙升，从我自己来看，现在每个月用的token量都在倍数增长。且很多基金经理现在没事都在跑AI。\n\n新技术线上，从玻璃基封装载板+microLED短距光通信这个组合，在玻璃桥没有出来之前，是很模糊的，到昨天深度跟踪的选手，已经能把三者连接综合起来看了。800V的技术路线也基本清晰了，接下来关键在于哪些公司能拿到份额，直供NV还是间接，这些会影响定价。此外交易也有向周边扩散，比如我买了两个光刻机的公司，现在都在走AI。\n紧缺度交易还在进行，不少进入了筹码博弈的溢价阶段，这个阶段没有的人很难上车，但已经在车上的会比较舒服。且看今天从小黑屋出来的是什么表现。围绕长鑫的交易，涨多了调一调，从时间上看，还有窗口。\n不用太担心指数，指数这里不涨是好事，更便于交易结构，也不用担心美股，核心通胀其实没有那么糟糕，美国统计局技术也很好的。"
+  },
+  {
+    date: "2026-06-25 11:45",
+    content: "很多人不解，为何A股变成了这样，连拥挤度都失效。\n我且不说A股，我们来聊聊另一个圈子——电影圈。\n咱们这很多人都会数票房，甚至有些老韭菜，13年干过光线，哪吒又干了光线。说这句话的意思是：我们是拿自己真钱去在股票上赌过票房的人，不是什么电影业的小白。\n\n电影业很惨，尤其是一些还指望着靠名声就能赚钱的人，今年屡屡翻车。倒是阿嫲这样的小制作红了，这就形成了更为鲜明的对比。电影好与不好，从商业上的判断是票房好不好，但是很多票房不好的人，更愿意从艺术上来说自己的电影好，暗戳戳地说，是观众不会欣赏，观众不行。而如果真的回到艺术层面上，好的电影，标准只有一个\"观众有共鸣，有二次创作\"，亦即\"一千个观众心中，就有一千个哈姆雷特\"。从传播的角度，没有人传播的艺术，便会是绝种的艺术。\n\n\"向市场认错是最低的成本\"，这条在A股我们都可以接受，坦然接受，否则很快本金会不见了。但为什么这些傲慢的，居高批评观众试图教育观众的\"电影人\"学不会这点呢？很简单，电影投资的钱不是他们的，是投资人的。就好像前几年公募没有改革时，给人接盘的公募基金经理一样。他们作为传媒人，本有机会去复盘互联网是怎么干翻纸媒的，从而外推流媒体会干翻影视。就好像汽车人有机会复盘光伏是怎么自作孽干死自己行业的，从而外推不能再这么卷车型卷产能的。但只要祭起\"你们圈外人不懂，别瞎哔哔\"这个看似很高深，实际纸糊一样的壁垒，他们就可以拒绝世界是会改变的，拒绝自己也要和世界一起改变。于是我们可以听到电影人说\"观众不行，是观众没钱了，观众没有欣赏能力\"。这就好像在大A说\"不是我的错，是市场错了\"。\n\n我无意参与任何电影的讨论，市场是有审美的，阿嫲能大卖，说明市场是有审美有眼光的。一个片子卖不出去，还教育观众，那就太托大了。\n那么用这个来对照我们的行业，如果你净值很差，很对不住客户的委托，那就少说市场不对，股民不对，我很牛逼，只是没认懂我的话。但凡放下身段，去倾听市场，很容易找到问题在哪。问题多半在投资人自制的茧房中。不外乎是认为时代的进步是泡沫，认为世界会回归到他喜爱的样子。这个事情，陶渊明讲得很清楚——不知魏晋 无论有汉。\n正如电影业要被短视频挑战，任何资产也要被AI浪潮重估，有些向上重估，有些向下。是否接受世界会改变，是否接受自己要和改变中的世界同步，便是一切的开始。\n别教育客户，别教育投资者，在大A，我们都用脚下单。"
+  }
+];
+
+// ═══════════════════════════════════════════════
+//  API 默认配置
+// ═══════════════════════════════════════════════
+
+window.API_DEFAULTS = {
+  baseUrl: "http://ai-api.jdcloud.com/anthropic",
+  apiKey: "pk-6b579094-3c2f-4131-9587-6518d024e435",
+  model: "Claude-Opus-4.6",
+  maxRecentPosts: 5
+};
+
+})();
+
+</script>
+<script>
+(function() {
+'use strict';
+
+// ═══════════════════════════════════════════════
+//  Helpers
+// ═══════════════════════════════════════════════
+
+var $ = function(sel) { return document.querySelector(sel); };
+var $$ = function(sel) { return document.querySelectorAll(sel); };
+
+// Toast
+var toastTimer = null;
+window.showToast = function(msg, duration) {
+  duration = duration || 2000;
+  var el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, duration);
+};
+
+// Copy to clipboard
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showToast('已复制到剪贴板');
+    }).catch(function() {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('已复制到剪贴板'); }
+  catch(e) { showToast('复制失败'); }
+  document.body.removeChild(ta);
+}
+
+// Debounce
+function debounce(fn, delay) {
+  var t;
+  return function() {
+    var ctx = this, args = arguments;
+    clearTimeout(t);
+    t = setTimeout(function() { fn.apply(ctx, args); }, delay);
+  };
+}
+
+// Escape HTML
+function esc(s) {
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
+// Simple markdown render (for AI chat bubbles)
+function renderMarkdown(text) {
+  var lines = text.split('\n');
+  var out = [];
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    // Headers
+    var hMatch = line.match(/^(#{1,3})\s+(.+)$/);
+    if (hMatch) {
+      out.push('<span class="md-h">' + esc(hMatch[2]) + '</span>');
+      continue;
+    }
+    // Bullet
+    var bMatch = line.match(/^[\-\*]\s+(.+)$/);
+    if (bMatch) {
+      var bulletContent = bMatch[1];
+      bulletContent = renderInline(bulletContent);
+      out.push('<span class="md-li">' + bulletContent + '</span>');
+      continue;
+    }
+    // Numbered list
+    var nMatch = line.match(/^(\d+)\.\s+(.+)$/);
+    if (nMatch) {
+      var numContent = nMatch[2];
+      numContent = renderInline(numContent);
+      out.push('<span class="md-li">' + nMatch[1] + '. ' + numContent + '</span>');
+      continue;
+    }
+    // Normal line
+    out.push(renderInline(esc(line)));
+  }
+  return out.join('\n');
+}
+
+function renderInline(text) {
+  // Bold **text**
+  text = text.replace(/\*\*(.+?)\*\*/g, '<span class="md-bold">$1</span>');
+  return text;
+}
+
+// Today string
+function todayStr() {
+  var d = new Date();
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var dd = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + mm + '-' + dd;
+}
+
+// ═══════════════════════════════════════════════
+//  Tab Switching
+// ═══════════════════════════════════════════════
+
+var rendered = { kb: false, material: false, chat: false };
+
+window.switchTab = function(tab) {
+  $$('.tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+  $$('.tab-content').forEach(function(c) { c.classList.toggle('active', c.id === 'tab-' + tab); });
+  if (!rendered[tab]) {
+    rendered[tab] = true;
+    if (tab === 'kb') renderKnowledgeBase();
+    else if (tab === 'material') renderMaterialLibrary();
+    else if (tab === 'chat') renderChatUI();
+  }
+  if (tab === 'chat') {
+    setTimeout(scrollChatBottom, 100);
+  }
+};
+
+// ═══════════════════════════════════════════════
+//  Tab 1: Knowledge Base
+// ═══════════════════════════════════════════════
+
+function renderKnowledgeBase() {
+  var P = window.PERSONA;
+  var html = '';
+
+  // Profile card
+  html += '<div class="card profile-card">';
+  html += '<div class="profile-avatar">唐</div>';
+  html += '<div class="profile-name">' + esc(P.name) + '</div>';
+  html += '<div class="profile-title">' + esc(P.title) + '</div>';
+  html += '<a class="profile-link" href="' + esc(P.weiboUrl) + '" target="_blank" rel="noopener">🔗 微博主页</a>';
+  html += '</div>';
+
+  // 风林火山体系
+  html += '<details>';
+  html += '<summary>风林火山体系</summary>';
+  html += '<div class="detail-body">';
+  html += '<p class="sub-desc" style="margin-bottom:12px;">' + esc(P.system.origin) + '</p>';
+  html += '<div class="sub-label">四部</div>';
+  html += '<table class="kb-table"><thead><tr><th>部</th><th>隐喻</th><th>职能</th><th>仓位</th><th>说明</th></tr></thead><tbody>';
+  P.system.parts.forEach(function(p) {
+    html += '<tr><td><strong>' + esc(p.name) + '</strong></td><td>' + esc(p.metaphor) + '</td><td>' + esc(p.role) + '</td><td>' + esc(p.position) + '</td><td>' + esc(p.desc) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div class="sub-label">辅助兵种</div>';
+  html += '<table class="kb-table"><thead><tr><th>名称</th><th>职能</th><th>说明</th></tr></thead><tbody>';
+  P.system.auxiliary.forEach(function(a) {
+    html += '<tr><td><strong>' + esc(a.name) + '</strong></td><td>' + esc(a.role) + '</td><td>' + esc(a.desc) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div class="sub-label">纪律</div>';
+  html += '<ul class="kb-list">';
+  P.system.discipline.forEach(function(d) {
+    html += '<li>' + esc(d) + '</li>';
+  });
+  html += '</ul>';
+  html += '</div></details>';
+
+  // 选股方法论
+  html += '<details>';
+  html += '<summary>选股方法论</summary>';
+  html += '<div class="detail-body">';
+  // 夹逼定理
+  html += '<div class="sub-label">' + esc(P.stockPicking.macro.name) + '</div>';
+  html += '<p class="sub-desc">' + esc(P.stockPicking.macro.desc) + '</p>';
+  html += '<ul class="kb-list">';
+  P.stockPicking.macro.steps.forEach(function(s) { html += '<li>' + esc(s) + '</li>'; });
+  html += '</ul>';
+  // 四级池子
+  html += '<div class="sub-label">' + esc(P.stockPicking.technical.name) + '</div>';
+  html += '<p class="sub-desc">' + esc(P.stockPicking.technical.flow) + '</p>';
+  html += '<ul class="kb-list">';
+  P.stockPicking.technical.criteria.forEach(function(c) { html += '<li>' + esc(c) + '</li>'; });
+  html += '</ul>';
+  html += '<p class="sub-desc">指标：' + esc(P.stockPicking.technical.indicators) + '</p>';
+  // 基本面
+  html += '<div class="sub-label">基本面偏好</div>';
+  html += '<ul class="kb-list">';
+  P.stockPicking.fundamentals.forEach(function(f) { html += '<li>' + esc(f) + '</li>'; });
+  html += '</ul>';
+  // 仓位管理
+  html += '<div class="sub-label">仓位管理</div>';
+  html += '<ul class="kb-list">';
+  P.stockPicking.positionMgmt.forEach(function(p) { html += '<li>' + esc(p) + '</li>'; });
+  html += '</ul>';
+  html += '</div></details>';
+
+  // PDCA
+  html += '<details>';
+  html += '<summary>PDCA 交易管理</summary>';
+  html += '<div class="detail-body">';
+  html += '<table class="kb-table"><thead><tr><th>步骤</th><th>行动</th></tr></thead><tbody>';
+  P.pdca.forEach(function(p) {
+    html += '<tr><td><strong>' + esc(p.step) + '</strong></td><td>' + esc(p.action) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div></details>';
+
+  // 行业观点 - 半导体
+  html += '<details>';
+  html += '<summary>行业观点 - 半导体</summary>';
+  html += '<div class="detail-body">';
+  html += '<table class="kb-table"><thead><tr><th>维度</th><th>观点</th></tr></thead><tbody>';
+  P.industryViews.semiconductor.forEach(function(v) {
+    html += '<tr><td><strong>' + esc(v.label) + '</strong></td><td>' + esc(v.value) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div></details>';
+
+  // 行业观点 - AI
+  html += '<details>';
+  html += '<summary>行业观点 - AI</summary>';
+  html += '<div class="detail-body">';
+  html += '<table class="kb-table"><thead><tr><th>维度</th><th>观点</th></tr></thead><tbody>';
+  P.industryViews.ai.forEach(function(v) {
+    html += '<tr><td><strong>' + esc(v.label) + '</strong></td><td>' + esc(v.value) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div></details>';
+
+  // 行业观点 - 其他板块
+  html += '<details>';
+  html += '<summary>行业观点 - 其他板块</summary>';
+  html += '<div class="detail-body">';
+  html += '<table class="kb-table"><thead><tr><th>板块</th><th>观点</th></tr></thead><tbody>';
+  P.industryViews.others.forEach(function(v) {
+    html += '<tr><td><strong>' + esc(v.sector) + '</strong></td><td>' + esc(v.view) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div></details>';
+
+  // 市场生态
+  html += '<details>';
+  html += '<summary>市场生态</summary>';
+  html += '<div class="detail-body">';
+  html += '<table class="kb-table"><thead><tr><th>话题</th><th>观点</th></tr></thead><tbody>';
+  P.marketEcology.forEach(function(v) {
+    html += '<tr><td><strong>' + esc(v.topic) + '</strong></td><td>' + esc(v.view) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  html += '</div></details>';
+
+  // 语言风格
+  html += '<details>';
+  html += '<summary>语言风格</summary>';
+  html += '<div class="detail-body">';
+  P.languageStyle.forEach(function(s) {
+    html += '<div class="style-pair">';
+    html += '<div class="style-feature">' + esc(s.feature) + '</div>';
+    html += '<div class="style-example">' + esc(s.example) + '</div>';
+    html += '</div>';
+  });
+  html += '</div></details>';
+
+  // 模拟 Prompt
+  html += '<details>';
+  html += '<summary>模拟 Prompt v1.0</summary>';
+  html += '<div class="detail-body">';
+  html += '<div class="code-block-wrap">';
+  html += '<pre class="code-block" id="promptCode">' + esc(P.systemPrompt) + '</pre>';
+  html += '<button class="copy-btn" onclick="copyPrompt()">复制</button>';
+  html += '</div>';
+  html += '</div></details>';
+
+  $('#kb-content').innerHTML = html;
+}
+
+window.copyPrompt = function() {
+  copyToClipboard(window.PERSONA.systemPrompt);
+};
+
+// Initial render of first tab
+renderKnowledgeBase();
+rendered.kb = true;
+
+// ═══════════════════════════════════════════════
+//  Tab 2: Material Library
+// ═══════════════════════════════════════════════
+
+var materialSearchQuery = '';
+
+function getLocalPosts() {
+  try {
+    return JSON.parse(localStorage.getItem('tangshi_posts') || '[]');
+  } catch(e) { return []; }
+}
+
+function saveLocalPosts(posts) {
+  localStorage.setItem('tangshi_posts', JSON.stringify(posts));
+}
+
+function getMergedPosts() {
+  var baked = (window.BAKED_POSTS || []).map(function(p) {
+    return { date: p.date, content: p.content, source: 'baked', id: 'b_' + p.date };
+  });
+  var local = getLocalPosts().map(function(p) {
+    return { date: p.date, content: p.content, source: 'local', id: p.id || 'l_' + p.date + '_' + Math.random() };
+  });
+  // Deduplicate by date+content
+  var seen = {};
+  var all = [];
+  baked.concat(local).forEach(function(p) {
+    var key = p.date + '|' + p.content.substring(0, 50);
+    if (!seen[key]) {
+      seen[key] = true;
+      all.push(p);
+    }
+  });
+  // Sort newest first
+  all.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  return all;
+}
+
+function renderMaterialLibrary() {
+  var html = '';
+
+  // Add form
+  html += '<div class="add-form">';
+  html += '<div class="form-row"><div style="flex:1;"><label class="form-label">日期</label>';
+  html += '<input type="date" class="form-input" id="addDate" value="' + todayStr() + '"></div></div>';
+  html += '<div class="form-row"><div style="flex:1;"><label class="form-label">内容</label>';
+  html += '<textarea class="form-input" id="addContent" rows="3" placeholder="粘贴微博内容..."></textarea></div></div>';
+  html += '<div class="form-row" style="justify-content:flex-end;"><button class="btn btn-primary" onclick="addPost()">添加素材</button></div>';
+  html += '</div>';
+
+  // Toolbar
+  html += '<div class="toolbar">';
+  html += '<input class="form-input" type="search" id="materialSearch" placeholder="搜索素材..." oninput="onSearchMaterial()">';
+  html += '<button class="btn btn-outline btn-sm" onclick="exportPosts()">导出</button>';
+  html += '<button class="btn btn-danger btn-sm" onclick="clearLocalPosts()">清空本地</button>';
+  html += '</div>';
+
+  // Stats
+  html += '<div class="stats-bar" id="materialStats"></div>';
+
+  // Post list
+  html += '<div id="materialList"></div>';
+
+  $('#material-content').innerHTML = html;
+  renderPostList();
+}
+
+function renderPostList() {
+  var posts = getMergedPosts();
+  var bakedCount = posts.filter(function(p) { return p.source === 'baked'; }).length;
+  var localCount = posts.filter(function(p) { return p.source === 'local'; }).length;
+  var statsEl = $('#materialStats');
+  if (statsEl) statsEl.textContent = '共 ' + posts.length + ' 条（内置 ' + bakedCount + ' + 手动 ' + localCount + '）';
+
+  // Filter
+  var q = materialSearchQuery.toLowerCase();
+  if (q) {
+    posts = posts.filter(function(p) {
+      return p.content.toLowerCase().indexOf(q) >= 0 || p.date.indexOf(q) >= 0;
+    });
+  }
+
+  var listEl = $('#materialList');
+  if (!listEl) return;
+
+  if (posts.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">' + (q ? '没有匹配的素材' : '暂无素材') + '</div>';
+    return;
+  }
+
+  var html = '';
+  posts.forEach(function(p) {
+    var isLong = p.content.length > 150;
+    html += '<div class="post-card" data-post-id="' + esc(p.id) + '">';
+    html += '<div class="post-header">';
+    html += '<span class="post-date">' + esc(p.date) + '</span>';
+    html += '<span class="post-source ' + p.source + '">' + (p.source === 'baked' ? '内置' : '手动') + '</span>';
+    html += '</div>';
+    html += '<div class="post-content' + (isLong ? ' truncated' : '') + '" onclick="togglePostExpand(this)">' + esc(p.content) + '</div>';
+    if (isLong) {
+      html += '<div class="post-expand-hint" onclick="togglePostExpand(this.previousElementSibling)">点击展开全文</div>';
+    }
+    if (p.source === 'local') {
+      html += '<div class="post-actions"><button class="btn btn-danger" onclick="deletePost(\'' + esc(p.id) + '\')">删除</button></div>';
+    }
+    html += '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+window.togglePostExpand = function(el) {
+  if (!el) return;
+  if (el.classList.contains('post-content')) {
+    el.classList.toggle('truncated');
+    var hint = el.nextElementSibling;
+    if (hint && hint.classList.contains('post-expand-hint')) {
+      hint.textContent = el.classList.contains('truncated') ? '点击展开全文' : '点击收起';
+    }
+  }
+};
+
+window.addPost = function() {
+  var dateEl = $('#addDate');
+  var contentEl = $('#addContent');
+  if (!dateEl || !contentEl) return;
+  var date = dateEl.value;
+  var content = contentEl.value.trim();
+  if (!content) { showToast('请输入内容'); return; }
+  if (!date) { showToast('请选择日期'); return; }
+
+  var posts = getLocalPosts();
+  posts.push({
+    date: date,
+    content: content,
+    id: 'l_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)
+  });
+  saveLocalPosts(posts);
+  contentEl.value = '';
+  renderPostList();
+  showToast('素材已添加');
+};
+
+window.deletePost = function(id) {
+  if (!confirm('确定删除这条素材？')) return;
+  var posts = getLocalPosts().filter(function(p) { return p.id !== id; });
+  saveLocalPosts(posts);
+  renderPostList();
+  showToast('已删除');
+};
+
+window.onSearchMaterial = debounce(function() {
+  var el = $('#materialSearch');
+  materialSearchQuery = el ? el.value : '';
+  renderPostList();
+}, 200);
+
+window.exportPosts = function() {
+  var posts = getMergedPosts();
+  if (posts.length === 0) { showToast('没有可导出的素材'); return; }
+  var md = '# 唐史主任司马迁 - 素材库\n\n';
+  md += '导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n---\n\n';
+  posts.forEach(function(p) {
+    md += '## ' + p.date + ' [' + (p.source === 'baked' ? '内置' : '手动') + ']\n\n';
+    md += p.content + '\n\n---\n\n';
+  });
+  copyToClipboard(md);
+};
+
+window.clearLocalPosts = function() {
+  if (!confirm('确定清空所有手动添加的素材？内置素材不受影响。')) return;
+  localStorage.removeItem('tangshi_posts');
+  renderPostList();
+  showToast('本地素材已清空');
+};
+
+// ═══════════════════════════════════════════════
+//  Tab 3: Chat
+// ═══════════════════════════════════════════════
+
+var chatHistory = [];
+var isSending = false;
+
+function loadChatHistory() {
+  try {
+    chatHistory = JSON.parse(localStorage.getItem('tangshi_chat') || '[]');
+  } catch(e) { chatHistory = []; }
+}
+
+function saveChatHistory() {
+  localStorage.setItem('tangshi_chat', JSON.stringify(chatHistory));
+}
+
+function getSettings() {
+  var defaults = window.API_DEFAULTS || {};
+  try {
+    var saved = JSON.parse(localStorage.getItem('tangshi_settings') || '{}');
+    return {
+      baseUrl: saved.baseUrl || defaults.baseUrl || '',
+      apiKey: saved.apiKey || defaults.apiKey || '',
+      model: saved.model || defaults.model || '',
+      maxRecentPosts: saved.maxRecentPosts !== undefined ? saved.maxRecentPosts : (defaults.maxRecentPosts || 5)
+    };
+  } catch(e) {
+    return {
+      baseUrl: defaults.baseUrl || '',
+      apiKey: defaults.apiKey || '',
+      model: defaults.model || '',
+      maxRecentPosts: defaults.maxRecentPosts || 5
+    };
+  }
+}
+
+function renderChatUI() {
+  loadChatHistory();
+  var html = '';
+  html += '<div class="chat-status-bar">';
+  html += '<span id="chatModelLabel"></span>';
+  html += '<button onclick="openSettings()" title="设置">&#9881;&#65039;</button>';
+  html += '</div>';
+  html += '<div class="chat-messages" id="chatMessages"></div>';
+  html += '<div class="chat-input-area">';
+  html += '<div class="chat-input-wrap">';
+  html += '<textarea class="chat-input" id="chatInput" rows="1" placeholder="输入消息..." onkeydown="onChatKeydown(event)"></textarea>';
+  html += '</div>';
+  html += '<button class="chat-send" id="chatSendBtn" onclick="sendMessage()">&#9652;</button>';
+  html += '</div>';
+  $('#chat-content').innerHTML = html;
+
+  updateModelLabel();
+  renderChatMessages();
+  setupAutoExpand();
+}
+
+function updateModelLabel() {
+  var s = getSettings();
+  var el = $('#chatModelLabel');
+  if (el) el.textContent = s.model || '未配置模型';
+}
+
+function renderChatMessages() {
+  var el = $('#chatMessages');
+  if (!el) return;
+  if (chatHistory.length === 0) {
+    el.innerHTML = '<div class="empty-state">发送消息开始对话<br>AI 将以唐史主任的风格回复</div>';
+    return;
+  }
+  var html = '';
+  chatHistory.forEach(function(msg) {
+    if (msg.role === 'user') {
+      html += '<div class="chat-bubble user">' + esc(msg.content) + '</div>';
+    } else if (msg.role === 'assistant') {
+      html += '<div class="chat-bubble ai">' + renderMarkdown(msg.content) + '</div>';
+    } else if (msg.role === 'error') {
+      html += '<div class="chat-bubble error">' + esc(msg.content) + '</div>';
+    }
+  });
+  html += '<div class="typing-indicator" id="typingIndicator"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  el.innerHTML = html;
+  scrollChatBottom();
+}
+
+function scrollChatBottom() {
+  var el = $('#chatMessages');
+  if (el) {
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
+function setupAutoExpand() {
+  var ta = $('#chatInput');
+  if (!ta) return;
+  ta.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+}
+
+function showTyping(show) {
+  var el = $('#typingIndicator');
+  if (el) el.classList.toggle('show', show);
+  if (show) scrollChatBottom();
+}
+
+function buildSystemPrompt() {
+  var s = getSettings();
+  var sys = window.PERSONA.systemPrompt;
+
+  // Supplement instructions
+  sys += '\n\n## 补充说明\n';
+  sys += '- 回复使用中文\n';
+  sys += '- 分析时按照上述框架展开，但语气保持你的个人风格\n';
+  sys += '- 可以适当使用口语化表达和你标志性的比喻\n';
+
+  // Inject recent posts
+  var n = s.maxRecentPosts;
+  if (n > 0) {
+    var posts = getMergedPosts().slice(0, n);
+    if (posts.length > 0) {
+      sys += '\n## 最近动态（供参考，体现你近期关注方向）\n';
+      posts.forEach(function(p) {
+        sys += '\n### ' + p.date + '\n' + p.content + '\n';
+      });
+    }
+  }
+
+  return sys;
+}
+
+window.sendMessage = function() {
+  if (isSending) return;
+  var ta = $('#chatInput');
+  if (!ta) return;
+  var text = ta.value.trim();
+  if (!text) return;
+
+  var s = getSettings();
+  if (!s.apiKey) {
+    showToast('请先在设置中配置 API Key');
+    openSettings();
+    return;
+  }
+
+  // Add user message
+  chatHistory.push({ role: 'user', content: text });
+  saveChatHistory();
+  ta.value = '';
+  ta.style.height = 'auto';
+  renderChatMessages();
+
+  isSending = true;
+  updateSendButton();
+  showTyping(true);
+
+  var systemPrompt = buildSystemPrompt();
+
+  // Build messages array (only user/assistant)
+  var apiMessages = [];
+  chatHistory.forEach(function(msg) {
+    if (msg.role === 'user' || msg.role === 'assistant') {
+      apiMessages.push({ role: msg.role, content: msg.content });
+    }
+  });
+
+  var body = {
+    model: s.model,
+    max_tokens: 4096,
+    system: systemPrompt,
+    messages: apiMessages
+  };
+
+  var url = s.baseUrl.replace(/\/+$/, '') + '/v1/messages';
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': s.apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify(body)
+  })
+  .then(function(resp) {
+    var ct = resp.headers.get('content-type') || '';
+    if (ct.indexOf('event-stream') >= 0) {
+      // SSE streaming
+      return handleSSE(resp);
+    }
+    if (!resp.ok) {
+      return resp.text().then(function(t) {
+        var errMsg = 'API 错误 (' + resp.status + ')';
+        try {
+          var errJson = JSON.parse(t);
+          if (errJson.error && errJson.error.message) errMsg += ': ' + errJson.error.message;
+          else errMsg += ': ' + t.substring(0, 200);
+        } catch(e) {
+          errMsg += ': ' + t.substring(0, 200);
+        }
+        throw new Error(errMsg);
+      });
+    }
+    return resp.json().then(function(data) {
+      var reply = '';
+      if (data.content && data.content.length > 0) {
+        data.content.forEach(function(block) {
+          if (block.type === 'text') reply += block.text;
+        });
+      }
+      if (!reply) reply = '(空回复)';
+      chatHistory.push({ role: 'assistant', content: reply });
+      saveChatHistory();
+      showTyping(false);
+      renderChatMessages();
+    });
+  })
+  .catch(function(err) {
+    showTyping(false);
+    var errContent = '请求失败：' + (err.message || '网络错误');
+    chatHistory.push({ role: 'error', content: errContent });
+    saveChatHistory();
+    renderChatMessages();
+  })
+  .finally(function() {
+    isSending = false;
+    updateSendButton();
+  });
+};
+
+function handleSSE(resp) {
+  return new Promise(function(resolve, reject) {
+    var reader = resp.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+    var fullText = '';
+
+    // Add a placeholder assistant message
+    chatHistory.push({ role: 'assistant', content: '' });
+    saveChatHistory();
+
+    function processChunk() {
+      reader.read().then(function(result) {
+        if (result.done) {
+          if (fullText) {
+            chatHistory[chatHistory.length - 1].content = fullText;
+            saveChatHistory();
+          }
+          showTyping(false);
+          renderChatMessages();
+          resolve();
+          return;
+        }
+
+        buffer += decoder.decode(result.value, { stream: true });
+        var lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        lines.forEach(function(line) {
+          line = line.trim();
+          if (!line || line.indexOf('data:') !== 0) return;
+          var data = line.substring(5).trim();
+          if (data === '[DONE]') return;
+          try {
+            var evt = JSON.parse(data);
+            if (evt.type === 'content_block_delta' && evt.delta && evt.delta.text) {
+              fullText += evt.delta.text;
+              chatHistory[chatHistory.length - 1].content = fullText;
+              renderChatMessages();
+            }
+          } catch(e) { /* skip non-JSON lines */ }
+        });
+
+        processChunk();
+      }).catch(function(err) {
+        showTyping(false);
+        if (fullText) {
+          chatHistory[chatHistory.length - 1].content = fullText;
+        } else {
+          chatHistory[chatHistory.length - 1] = { role: 'error', content: '流式读取中断: ' + err.message };
+        }
+        saveChatHistory();
+        renderChatMessages();
+        resolve();
+      });
+    }
+
+    processChunk();
+  });
+}
+
+function updateSendButton() {
+  var btn = $('#chatSendBtn');
+  if (btn) btn.disabled = isSending;
+}
+
+window.onChatKeydown = function(e) {
+  // Desktop: Enter to send, Shift+Enter for newline
+  if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 600) {
+    e.preventDefault();
+    sendMessage();
+  }
+};
+
+// ── Settings Modal ──
+
+window.openSettings = function() {
+  var s = getSettings();
+  $('#settingUrl').value = s.baseUrl;
+  $('#settingKey').value = s.apiKey;
+  $('#settingModel').value = s.model;
+  $('#settingPosts').value = s.maxRecentPosts;
+  $('#settingPostsVal').textContent = s.maxRecentPosts;
+  $('#settingsModal').classList.add('show');
+};
+
+window.closeSettings = function() {
+  $('#settingsModal').classList.remove('show');
+};
+
+window.saveSettings = function() {
+  var settings = {
+    baseUrl: $('#settingUrl').value.trim(),
+    apiKey: $('#settingKey').value.trim(),
+    model: $('#settingModel').value.trim(),
+    maxRecentPosts: parseInt($('#settingPosts').value, 10) || 0
+  };
+  localStorage.setItem('tangshi_settings', JSON.stringify(settings));
+  closeSettings();
+  updateModelLabel();
+  showToast('设置已保存');
+};
+
+// Slider value display
+var postsSlider = document.getElementById('settingPosts');
+if (postsSlider) {
+  postsSlider.addEventListener('input', function() {
+    var el = document.getElementById('settingPostsVal');
+    if (el) el.textContent = this.value;
+  });
+}
+
+// Close modal on overlay click
+$('#settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+window.clearChat = function() {
+  if (!confirm('确定清空所有对话记录？')) return;
+  chatHistory = [];
+  localStorage.removeItem('tangshi_chat');
+  closeSettings();
+  renderChatMessages();
+  showToast('对话已清空');
+};
+
+})();
+</script>
+</body>
+</html>

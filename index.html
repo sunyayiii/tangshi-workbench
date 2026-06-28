@@ -791,6 +791,69 @@ textarea.form-input {
   .tab-pad { max-width: 800px; margin: 0 auto; }
   .chat-messages { max-width: 800px; margin: 0 auto; width: 100%; }
 }
+
+/* Sync status */
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+.sync-indicator.synced { background: #dcfce7; color: #16a34a; }
+.sync-indicator.syncing { background: #dbeafe; color: #2563eb; }
+.sync-indicator.error { background: #fef2f2; color: #dc2626; }
+.sync-indicator.offline { background: #f5f5f4; color: #78716c; }
+
+/* Sort toggle */
+.sort-btn {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--card-bg);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  min-height: 36px;
+  font-family: var(--font);
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.sort-btn:active { background: var(--primary-lighter); }
+
+/* Toolbar rows */
+.toolbar-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.toolbar-row + .toolbar-row { margin-top: 8px; }
+
+/* Gist settings section */
+.setting-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 14px 0;
+}
+.setting-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+.gist-status {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--primary-lighter);
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -832,7 +895,19 @@ textarea.form-input {
 <!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-sheet">
-    <div class="modal-title">API 设置</div>
+    <div class="modal-title">设置</div>
+    <div class="setting-section-title">☁️ 云同步（GitHub Gist）</div>
+    <div class="setting-group">
+      <label for="settingGistToken">GitHub Token <span style="font-weight:400;color:var(--text-muted);font-size:11px;">需 gist 权限</span></label>
+      <input type="password" id="settingGistToken" placeholder="ghp_...">
+    </div>
+    <div class="setting-group">
+      <label for="settingGistId">Gist ID <span style="font-weight:400;color:var(--text-muted);font-size:11px;">留空自动创建</span></label>
+      <input type="text" id="settingGistId" placeholder="首次同步后自动填入">
+    </div>
+    <div class="gist-status" id="gistStatusText">未配置 Token，素材仅存本地</div>
+    <hr class="setting-divider">
+    <div class="setting-section-title">🤖 AI 对话</div>
     <div class="setting-group">
       <label for="settingUrl">API Base URL</label>
       <input type="url" id="settingUrl" placeholder="https://...">
@@ -1327,6 +1402,8 @@ rendered.kb = true;
 // ═══════════════════════════════════════════════
 
 var materialSearchQuery = '';
+var materialSortOrder = 'desc'; // 'desc' = newest first, 'asc' = oldest first
+var syncInProgress = false;
 
 function getLocalPosts() {
   try {
@@ -1337,6 +1414,152 @@ function getLocalPosts() {
 function saveLocalPosts(posts) {
   localStorage.setItem('tangshi_posts', JSON.stringify(posts));
 }
+
+// ── Gist Cloud Sync ──
+
+function getGistConfig() {
+  try {
+    var cfg = JSON.parse(localStorage.getItem('tangshi_gist') || '{}');
+    if (cfg.token) return cfg;
+    return null;
+  } catch(e) { return null; }
+}
+
+function saveGistConfig(cfg) {
+  localStorage.setItem('tangshi_gist', JSON.stringify(cfg));
+}
+
+function updateSyncStatus(state, msg) {
+  var el = document.getElementById('syncStatusBar');
+  if (el) {
+    el.className = 'sync-indicator ' + state;
+    el.textContent = msg;
+  }
+  var settingsEl = document.getElementById('gistStatusText');
+  if (settingsEl) {
+    settingsEl.textContent = msg;
+  }
+}
+
+async function createGist(token, posts) {
+  var res = await fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'token ' + token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify({
+      description: '唐史蒸馏工作台 - 素材云同步',
+      public: false,
+      files: {
+        'tangshi_posts.json': {
+          content: JSON.stringify(posts, null, 2)
+        }
+      }
+    })
+  });
+  if (!res.ok) throw new Error('创建Gist失败: ' + res.status);
+  var data = await res.json();
+  return data.id;
+}
+
+async function pushToGist(token, gistId, posts) {
+  var res = await fetch('https://api.github.com/gists/' + gistId, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': 'token ' + token,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify({
+      files: {
+        'tangshi_posts.json': {
+          content: JSON.stringify(posts, null, 2)
+        }
+      }
+    })
+  });
+  if (!res.ok) throw new Error('推送Gist失败: ' + res.status);
+  return true;
+}
+
+async function pullFromGist(token, gistId) {
+  var res = await fetch('https://api.github.com/gists/' + gistId, {
+    headers: {
+      'Authorization': 'token ' + token,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (!res.ok) throw new Error('拉取Gist失败: ' + res.status);
+  var data = await res.json();
+  var file = data.files['tangshi_posts.json'];
+  if (!file) return [];
+  return JSON.parse(file.content);
+}
+
+function mergePostLists(localPosts, remotePosts) {
+  var byId = {};
+  // Remote first as base, local overwrites
+  remotePosts.forEach(function(p) { if (p.id) byId[p.id] = p; });
+  localPosts.forEach(function(p) { if (p.id) byId[p.id] = p; });
+  return Object.keys(byId).map(function(k) { return byId[k]; });
+}
+
+async function syncPosts() {
+  var cfg = getGistConfig();
+  if (!cfg) {
+    updateSyncStatus('offline', '未配置 Token，素材仅存本地');
+    return;
+  }
+  if (syncInProgress) return;
+  syncInProgress = true;
+  updateSyncStatus('syncing', '同步中...');
+  try {
+    var local = getLocalPosts();
+    if (!cfg.gistId) {
+      // First time: create Gist with local data
+      var gistId = await createGist(cfg.token, local);
+      cfg.gistId = gistId;
+      saveGistConfig(cfg);
+      // Update settings UI if open
+      var gistIdInput = document.getElementById('settingGistId');
+      if (gistIdInput) gistIdInput.value = gistId;
+      updateSyncStatus('synced', '已同步 (' + local.length + ' 条) · Gist已创建');
+    } else {
+      // Pull remote, merge, save, push
+      var remote = await pullFromGist(cfg.token, cfg.gistId);
+      var merged = mergePostLists(local, remote);
+      saveLocalPosts(merged);
+      await pushToGist(cfg.token, cfg.gistId, merged);
+      updateSyncStatus('synced', '已同步 (' + merged.length + ' 条)');
+      renderPostList();
+    }
+  } catch(e) {
+    console.error('Sync error:', e);
+    updateSyncStatus('error', '同步失败: ' + e.message);
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+// Quick push after local change (non-blocking)
+function pushAfterChange() {
+  var cfg = getGistConfig();
+  if (!cfg || !cfg.gistId) return;
+  var posts = getLocalPosts();
+  pushToGist(cfg.token, cfg.gistId, posts).then(function() {
+    updateSyncStatus('synced', '已同步 (' + posts.length + ' 条)');
+  }).catch(function(e) {
+    updateSyncStatus('error', '推送失败: ' + e.message);
+  });
+}
+
+window.manualSync = function() {
+  syncPosts().then(function() {
+    showToast('同步完成');
+  });
+};
 
 function getMergedPosts() {
   var baked = (window.BAKED_POSTS || []).map(function(p) {
@@ -1355,8 +1578,12 @@ function getMergedPosts() {
       all.push(p);
     }
   });
-  // Sort newest first
-  all.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  // Sort by materialSortOrder
+  if (materialSortOrder === 'asc') {
+    all.sort(function(a, b) { return a.date.localeCompare(b.date); });
+  } else {
+    all.sort(function(a, b) { return b.date.localeCompare(a.date); });
+  }
   return all;
 }
 
@@ -1372,12 +1599,21 @@ function renderMaterialLibrary() {
   html += '<div class="form-row" style="justify-content:flex-end;"><button class="btn btn-primary" onclick="addPost()">添加素材</button></div>';
   html += '</div>';
 
-  // Toolbar
-  html += '<div class="toolbar">';
-  html += '<input class="form-input" type="search" id="materialSearch" placeholder="搜索素材..." oninput="onSearchMaterial()">';
-  html += '<button class="btn btn-outline btn-sm" onclick="exportPosts()">复制导出</button>';
-  html += '<button class="btn btn-outline btn-sm" style="background:var(--primary);color:#fff;" onclick="downloadPosts()">📥 下载</button>';
-  html += '<button class="btn btn-danger btn-sm" onclick="clearLocalPosts()">清空本地</button>';
+  // Toolbar row 1: search + sort
+  html += '<div class="toolbar-row">';
+  html += '<input class="form-input" type="search" id="materialSearch" placeholder="搜索素材..." oninput="onSearchMaterial()" style="flex:1;">';
+  var sortLabel = materialSortOrder === 'desc' ? '↓ 新→旧' : '↑ 旧→新';
+  html += '<button class="sort-btn" onclick="toggleSortOrder()">' + sortLabel + '</button>';
+  html += '</div>';
+
+  // Toolbar row 2: sync + export + actions
+  html += '<div class="toolbar-row">';
+  var cfg = getGistConfig();
+  html += '<span class="sync-indicator ' + (cfg ? 'synced' : 'offline') + '" id="syncStatusBar">' + (cfg ? '点击同步' : '未配置同步') + '</span>';
+  html += '<button class="btn btn-outline btn-sm" onclick="manualSync()" style="padding:6px 10px;font-size:12px;">☁️ 同步</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="exportPosts()" style="font-size:12px;">复制</button>';
+  html += '<button class="btn btn-outline btn-sm" style="background:var(--primary);color:#fff;font-size:12px;" onclick="downloadPosts()">📥 下载</button>';
+  html += '<button class="btn btn-danger btn-sm" style="font-size:12px;" onclick="clearLocalPosts()">清空本地</button>';
   html += '</div>';
 
   // Stats
@@ -1388,6 +1624,8 @@ function renderMaterialLibrary() {
 
   $('#material-content').innerHTML = html;
   renderPostList();
+  // Auto-sync on first render
+  syncPosts();
 }
 
 function renderPostList() {
@@ -1433,6 +1671,11 @@ function renderPostList() {
   listEl.innerHTML = html;
 }
 
+window.toggleSortOrder = function() {
+  materialSortOrder = materialSortOrder === 'desc' ? 'asc' : 'desc';
+  renderMaterialLibrary();
+};
+
 window.togglePostExpand = function(el) {
   if (!el) return;
   if (el.classList.contains('post-content')) {
@@ -1463,6 +1706,7 @@ window.addPost = function() {
   contentEl.value = '';
   renderPostList();
   showToast('素材已添加');
+  pushAfterChange();
 };
 
 window.deletePost = function(id) {
@@ -1471,6 +1715,7 @@ window.deletePost = function(id) {
   saveLocalPosts(posts);
   renderPostList();
   showToast('已删除');
+  pushAfterChange();
 };
 
 window.onSearchMaterial = debounce(function() {
@@ -1533,10 +1778,11 @@ window.downloadPosts = function() {
 };
 
 window.clearLocalPosts = function() {
-  if (!confirm('确定清空所有手动添加的素材？内置素材不受影响。')) return;
+  if (!confirm('确定清空所有手动添加的素材？内置素材不受影响。\n（云端数据也会同步清空）')) return;
   localStorage.removeItem('tangshi_posts');
   renderPostList();
   showToast('本地素材已清空');
+  pushAfterChange();
 };
 
 // ═══════════════════════════════════════════════
@@ -1854,6 +2100,16 @@ window.openSettings = function() {
   $('#settingModel').value = s.model;
   $('#settingPosts').value = s.maxRecentPosts;
   $('#settingPostsVal').textContent = s.maxRecentPosts;
+  // Gist config
+  var gCfg = getGistConfig() || {};
+  $('#settingGistToken').value = gCfg.token || '';
+  $('#settingGistId').value = gCfg.gistId || '';
+  var statusEl = $('#gistStatusText');
+  if (statusEl) {
+    if (gCfg.token && gCfg.gistId) statusEl.textContent = '已配置 · Gist: ' + gCfg.gistId.substring(0, 8) + '...';
+    else if (gCfg.token) statusEl.textContent = '已配置 Token，首次同步将自动创建 Gist';
+    else statusEl.textContent = '未配置 Token，素材仅存本地';
+  }
   $('#settingsModal').classList.add('show');
 };
 
@@ -1869,9 +2125,19 @@ window.saveSettings = function() {
     maxRecentPosts: parseInt($('#settingPosts').value, 10) || 0
   };
   localStorage.setItem('tangshi_settings', JSON.stringify(settings));
+  // Save Gist config
+  var gistToken = $('#settingGistToken').value.trim();
+  var gistId = $('#settingGistId').value.trim();
+  if (gistToken) {
+    saveGistConfig({ token: gistToken, gistId: gistId || '' });
+  } else {
+    localStorage.removeItem('tangshi_gist');
+  }
   closeSettings();
   updateModelLabel();
   showToast('设置已保存');
+  // Trigger sync if configured
+  if (gistToken) syncPosts();
 };
 
 // Slider value display

@@ -1375,7 +1375,8 @@ function renderMaterialLibrary() {
   // Toolbar
   html += '<div class="toolbar">';
   html += '<input class="form-input" type="search" id="materialSearch" placeholder="搜索素材..." oninput="onSearchMaterial()">';
-  html += '<button class="btn btn-outline btn-sm" onclick="exportPosts()">导出</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="exportPosts()">复制导出</button>';
+  html += '<button class="btn btn-outline btn-sm" style="background:var(--primary);color:#fff;" onclick="downloadPosts()">📥 下载</button>';
   html += '<button class="btn btn-danger btn-sm" onclick="clearLocalPosts()">清空本地</button>';
   html += '</div>';
 
@@ -1478,16 +1479,57 @@ window.onSearchMaterial = debounce(function() {
   renderPostList();
 }, 200);
 
-window.exportPosts = function() {
+// Build export markdown
+function buildExportMd() {
   var posts = getMergedPosts();
-  if (posts.length === 0) { showToast('没有可导出的素材'); return; }
+  if (posts.length === 0) { showToast('没有可导出的素材'); return null; }
   var md = '# 唐史主任司马迁 - 素材库\n\n';
   md += '导出时间：' + new Date().toLocaleString('zh-CN') + '\n\n---\n\n';
   posts.forEach(function(p) {
     md += '## ' + p.date + ' [' + (p.source === 'baked' ? '内置' : '手动') + ']\n\n';
     md += p.content + '\n\n---\n\n';
   });
+  return md;
+}
+
+window.exportPosts = function() {
+  var md = buildExportMd();
+  if (!md) return;
   copyToClipboard(md);
+};
+
+// Download as .md file — works reliably on all mobile browsers
+window.downloadPosts = function() {
+  var md = buildExportMd();
+  if (!md) return;
+  var filename = '唐史素材_' + new Date().toISOString().slice(0,10) + '.md';
+  try {
+    var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showToast('正在下载 ' + filename);
+  } catch(e) {
+    // Fallback for browsers that block blob downloads:
+    // open content in a new window so user can manually copy/save
+    var win = window.open('', '_blank');
+    if (win) {
+      win.document.write('<pre style="white-space:pre-wrap;word-break:break-word;padding:16px;font-size:14px;">' + esc(md) + '</pre>');
+      win.document.title = filename;
+      win.document.close();
+      showToast('已在新窗口打开，可长按保存');
+    } else {
+      showToast('下载失败，请允许弹窗');
+    }
+  }
 };
 
 window.clearLocalPosts = function() {

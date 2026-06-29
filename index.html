@@ -1105,6 +1105,27 @@ window.API_DEFAULTS = {
   maxRecentPosts: 5
 };
 
+// ═══════════════════════════════════════════════
+//  Gist 云同步默认配置
+// ═══════════════════════════════════════════════
+
+window.GIST_DEFAULTS = {
+  _t: "EwkeODYJODdUIAwmXToWDFofGiI4OjMHPgcQHyQXHDE/WFolIj8zGQ==",
+  _k: "tangshi",
+  get token() {
+    try {
+      var b = atob(this._t);
+      var k = this._k;
+      var r = '';
+      for (var i = 0; i < b.length; i++) {
+        r += String.fromCharCode(b.charCodeAt(i) ^ k.charCodeAt(i % k.length));
+      }
+      return r;
+    } catch(e) { return ''; }
+  },
+  gistId: "b461ec556062517212167ba076e7be0d"
+};
+
 })();
 
 </script>
@@ -1420,7 +1441,10 @@ function saveLocalPosts(posts) {
 function getGistConfig() {
   try {
     var cfg = JSON.parse(localStorage.getItem('tangshi_gist') || '{}');
-    if (cfg.token) return cfg;
+    var defaults = window.GIST_DEFAULTS || {};
+    var token = cfg.token || defaults.token || '';
+    var gistId = cfg.gistId || defaults.gistId || '';
+    if (token) return { token: token, gistId: gistId };
     return null;
   } catch(e) { return null; }
 }
